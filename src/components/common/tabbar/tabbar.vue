@@ -18,5 +18,6 @@ export default {
   left: 0px;
   right: 0px;
   height: 44px;
+  z-index: 101;
 }
 </style>

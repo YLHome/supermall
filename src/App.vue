@@ -6,7 +6,7 @@
 </template>
 <script>
 
-import mainTabBar from './components/content/mainTabBar'
+import MainTabBar from './components/content/mainTabBar'
 
 export default {
   created() {
@@ -18,7 +18,7 @@ export default {
     }
   },
   components : {
-    mainTabBar
+    MainTabBar
   }
 
   

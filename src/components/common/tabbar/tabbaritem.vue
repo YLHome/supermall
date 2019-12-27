@@ -43,7 +43,7 @@ export default {
 .tab-bar-item{
   flex: 1;
   text-align: center;
-  background-color: rgb(14, 13, 13);
+  background-color: rgb(190, 190, 190);
 }
 .tab-bar-item img{
   width: 24px;
@@ -52,6 +52,6 @@ export default {
   margin-top: 2px;
 }
 .active{
-  color: red
+  color: pink
 }
 </style>
