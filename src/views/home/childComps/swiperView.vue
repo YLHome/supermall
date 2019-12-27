@@ -3,7 +3,7 @@
     <Swiper ref="swiper" v-if="banner.length">
       <SwiperItem v-for="(item, index) in banner" :key="index" >
         <a :href="item.link">
-          <img :src="item.image" alt="">
+          <img :src="item.image" alt="" @load="imgLoad">
         </a>
       </SwiperItem>
     </Swiper>
@@ -28,6 +28,9 @@ export default {
 		    if (this.$refs.swiper) {
           this.$refs.swiper.startTimer()
         }
+      },
+      imgLoad(){
+        this.$emit('swiperLoad')
       }
     }
 }

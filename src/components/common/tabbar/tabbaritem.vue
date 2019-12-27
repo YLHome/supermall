@@ -24,6 +24,7 @@ export default {
   },
   methods: {
     changePath(path){
+      
       this.$router.push(path);
     }
   }, 

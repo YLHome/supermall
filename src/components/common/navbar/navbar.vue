@@ -1,6 +1,6 @@
 <template>
   <div class="nav-bar">
-    <div class="nav-wrap">
+    <div class="nav-wrap" :style="{ 'background-color' : color}">
       <div class="left"><slot name="left"></slot></div>
       <div class="center"><slot name="center"></slot></div>
       <div class="right"><slot name="right"></slot></div>
@@ -10,7 +10,14 @@
 
 <script>
 export default {
-
+  props : {
+    color : {
+      type : String,
+      default(){
+        return 'pink'
+      }
+    }
+  }
 }
 </script>
 

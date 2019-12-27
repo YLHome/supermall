@@ -1,7 +1,7 @@
 <template>
-  <div class="goods-item">
+  <div class="goods-item" @click="toDetail">
     <div class="item-img">
-      <img :src="goodsItem.show.img">
+      <img :src="goodsItem.show.img" @load="imgLoad">
     </div>
     
     <div class="title-hot">
@@ -22,7 +22,15 @@ export default {
       type : Object
     }
     
-  }
+  },
+  methods: {
+    imgLoad(){
+      this.$bus.$emit('imgLoad')
+    },
+    toDetail(){
+      this.$router.push('/detail')
+    }
+  },
 }
 </script>
 
