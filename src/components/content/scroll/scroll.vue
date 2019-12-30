@@ -54,11 +54,5 @@ export default {
 </script>
 
 <style scoped>
-.wrapper{
-  position: absolute;
-  top: 44px;
-  bottom: 44px;
-  left: 0;
-  right: 0;
-}
+
 </style>

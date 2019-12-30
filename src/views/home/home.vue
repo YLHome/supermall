@@ -17,6 +17,7 @@
             :pullUpLoad = 'true' 
             @getScroll = getScroll
             @upLoad = upLoad
+            class="wrapper"
     >
       <home-swiper :banner = banner ref="hSwiper" @swiperLoad = getTabHeight></home-swiper>
       <recommend :recommend = recommend></recommend>
@@ -214,6 +215,13 @@ export default {
     position: sticky;
     top: 44px;
     z-index: 99;
+  }
+  .wrapper{
+    position: absolute;
+    top: 44px;
+    bottom: 44px;
+    left: 0;
+    right: 0;
   }
   
 </style>
