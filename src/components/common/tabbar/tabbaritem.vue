@@ -1,58 +1,51 @@
 <template>
-    <div class="tab-bar-item" @click="changePath(path)">
-      <div v-if="!isActive"><slot name="item-icon"></slot></div>
-      <div v-else><slot name="item-icon-active"></slot></div>
-      <div :style="activeStyle"><slot name="item-text"></slot></div>
-    </div>
+  <div id="tab-bar-item" @click="itemClick">
+    <div class="item-icon" v-show="!isActive"><slot name="icon"></slot></div>
+    <div class="item-active-icon" v-show="isActive"><slot name="active-icon"></slot></div>
+    <div class="item-text" :style="activeStyle"><slot name="text"></slot></div>
+  </div>
 </template>
 
 <script>
-export default {
-  data() {
-    return {
-      // isActive : false
-    }
-  },
-  props:{
-    path : {
-      type : String
+	export default {
+		name: "TabBarItem",
+    props: {
+			link: {
+				type: String,
+        required: true
+      }
     },
-    activeColor : {
-      type : String,
-      default : 'red'
-    }
-  },
-  methods: {
-    changePath(path){
-      
-      this.$router.push(path);
-    }
-  }, 
-  computed: {
-    isActive(){
-      // console.log(this.$route.path.indexOf(this.path) != -1);
-      return this.$route.path.indexOf(this.path) != -1;
+    computed: {
+			isActive() {
+				return this.$route.path.indexOf(this.link) !== -1
+      },
+      activeStyle() {
+				return this.isActive ? {'color': 'red'} : {}
+      }
     },
-    activeStyle(){
-      return this.isActive ? {color : this.activeColor} : {}
+    methods: {
+			itemClick() {
+				this.$router.replace(this.link)
+      }
     }
-  }, 
-}
+	}
 </script>
 
-<style>
-.tab-bar-item{
-  flex: 1;
-  text-align: center;
-  background-color: rgb(190, 190, 190);
-}
-.tab-bar-item img{
-  width: 24px;
-  height: 24px;
-  vertical-align: middle;
-  margin-top: 2px;
-}
-.active{
-  color: pink
-}
+<style scoped>
+  #tab-bar-item {
+    flex: 1;
+  }
+
+  .item-icon img, .item-active-icon img {
+    width: 24px;
+    height: 24px;
+    margin-top: 5px;
+    vertical-align: middle;
+  }
+
+  .item-text {
+    font-size: 12px;
+    margin-top: 3px;
+    color: #333;
+  }
 </style>

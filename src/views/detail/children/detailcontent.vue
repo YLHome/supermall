@@ -19,7 +19,7 @@
       </div>
 
       <div class="text-footer">
-        <span class="text-time">{{ contentInfo.created }}</span>
+        <span class="text-time">{{ contentInfo.created | showDate}}</span>
         <span class="text-style">{{ contentInfo.style }}</span>
       </div>
 
@@ -34,15 +34,22 @@
 </template>
 
 <script>
+import {formatDate} from "@/common/utils";
 export default {
-props : {
-  contentInfo : {
-    type : Object,
-    default(){
-      return {}
+  props : {
+    contentInfo : {
+      type : Object,
+      default(){
+        return {}
+      }
+    }
+  },
+  filters : {
+    showDate : function(value){
+      let date = new Date(value*1000);
+      return formatDate(date,'yyyy-MM-dd');
     }
   }
-}
 }
 </script>
 

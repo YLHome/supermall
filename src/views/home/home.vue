@@ -1,227 +1,199 @@
 <template>
-  <div class="home">
-    <nav-bar class="nav-bar">
-      <div slot="center">购物街</div>
-    </nav-bar>
-
-    <tab-contrl :titles = "['流行','新款','精品']" 
-                  class="tab-contrl"
-                  @goodsIndex = goodsIndex
-                  ref="tabContrl1"
-                  v-show="isShowTab"
-                  
-    ></tab-contrl>
-
-    <scroll ref="scroll" 
-            :probeType = '3' 
-            :pullUpLoad = 'true' 
-            @getScroll = getScroll
-            @upLoad = upLoad
-            class="wrapper"
-    >
-      <home-swiper :banner = banner ref="hSwiper" @swiperLoad = getTabHeight></home-swiper>
-      <recommend :recommend = recommend></recommend>
-      <feature-view></feature-view>
-      <tab-contrl :titles = "['流行','新款','精品']" 
-                  class="tab-contrl"
-                  @goodsIndex = goodsIndex
-                  ref="tabContrl2"
-      ></tab-contrl>
-      <good-list :goodList = activeGoodsList></good-list>
-    </scroll>  
-
-    <back-top @click.native="backTop" v-show="isShowBack"></back-top>
+  <div id="home">
+    <nav-bar class="nav-bar"><div slot="center">购物街</div></nav-bar>
+    <tab-control v-show="isTabFixed" class="fixed" @itemClick="tabClick"
+                 :titles="['流行', '新款', '精选']" ref="tabControl1"></tab-control>
+    <scroll class="content"
+            ref="scroll"
+            @scroll="contentScroll"
+            @pullingUp="loadMore"
+            :data="showGoodsList"
+            :pull-up-load="true"
+            :probe-type="3">
+      <div>
+        <home-swiper :banners="banners"
+                     ref="hSwiper" @swiperLoad=swiperLoad></home-swiper>
+        <feature-view :features="recommends"></feature-view>
+        <recommend-view @recommendLoad = recommendLoad></recommend-view>
+        <tab-control @itemClick="tabClick"
+                     :titles="['流行', '新款', '精选']"
+                     ref="tabControl2"></tab-control>
+        <goods-list :goods-list="showGoodsList"></goods-list>
+      </div>
+    </scroll>
+    <back-top @backTop="backTop" class="back-top" v-show="showBackTop">
+      <img src="~assets/img/common/top.png" alt="">
+    </back-top>
   </div>
 </template>
 
 <script>
-import navBar from '@/components/common/navbar/navbar';
-import homeSwiper from './childComps/swiperView';
-import recommend from './childComps/recommonView';
-import featureView from './childComps/featureView';
-import tabContrl from 'components/content/tabContrl';
-import goodList from 'components/content/goodsList/goodsList'
+  import NavBar from 'common/navbar/NavBar'
+  import Scroll from 'common/scroll/Scroll'
+  import TabControl from 'content/tabControl/TabControl'
+  import BackTop from 'content/backTop/BackTop'
+  import HomeSwiper from './childComps/HomeSwiper'
+  import FeatureView from './childComps/FeatureView'
+  import RecommendView from './childComps/RecommendView'
+  import GoodsList from './childComps/GoodsList'
+  import {getHomeMultidata, getHomeData, RECOMMEND, BANNER} from "network/home";
+  import {NEW, POP, SELL, BACKTOP_DISTANCE} from "@/common/const";
 
-import backTop from 'components/content/backTop/backTop'
+  export default {
+		name: "Home",
+    components: {
+		  NavBar,
+      Scroll,
+      TabControl,
+      BackTop,
+      HomeSwiper,
+      FeatureView,
+      RecommendView,
+      GoodsList,
+    },
+    data() {
+		  return {
+		    banners: [],
+        recommends: [],
+        goodsList: {
+          'pop': {page: 1, list: []},
+          'new': {page: 1, list: []},
+          'sell': {page: 1, list: []}
+        },
+        currentType: POP,
+        isTabFixed: false,
+        tabOffsetTop: 0,
+        changeTabTop: 0,
+        showBackTop: false
+      }
+    },
+    computed: {
+		  showGoodsList() {
+		    return this.goodsList[this.currentType].list
+      }
+    },
+    created() {
+      console.log('创建Home');
+      // 1.请求多个数据
+      this.getMultiData()
 
-import scroll from 'components/content/scroll/scroll'
-import axios from 'axios'
-axios.defaults.baseURL = 'http://106.54.54.237:8000/api/w1'
-// baseURL = "http://123.207.32.32:8000/api/w1"
-// baseURL = "http://106.54.54.237:8000/api/w1"
-export default {
-  data() {
-    return {
-      banner : [],
-      recommend : [],
-      goods : {
-        'pop' : { page : 0, list : []},
-        'new' : { page : 0, list : []},
-        'sell' : { page : 0, list : []}
+      // 2.请求商品数据
+      this.getHomeProducts(POP)
+      this.getHomeProducts(NEW)
+      this.getHomeProducts(SELL)
+    },
+    activated: function () {
+      this.$refs.hSwiper.startTimer()
+    },
+    deactivated: function () {
+      this.$refs.hSwiper.stopTimer()
+    },
+    updated() {
+      // 判断下tabOffsetTop是否有因为图片未加载完而数值不对,如果不对就进行重新赋值
+      
+        this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop;
+        this.changeTabTop = this.tabOffsetTop;
+        console.log(this.tabOffsetTop);
+      
+      
+    },    
+    methods: {
+      swiperLoad(){
+
       },
-      currentType : 'pop',
-      isShowBack : false,
-      backTopHeight : 0,
-      isShowTab : false,
-      
-    }
-  },
+      recommendLoad(){
 
-
-  components : {
-    navBar,
-    homeSwiper,
-    recommend,
-    featureView,
-    tabContrl,
-    goodList,
-
-    backTop,
-    scroll
-  },
-  created() {
-    //获取首页数据
-    this.getHome();
-    //获取商品数据
-    this.getGoods('pop');
-    this.getGoods('new');
-    this.getGoods('sell');
-  },
-  mounted() {
-    const refresh = this.debounce(this.$refs.scroll.refresh);
-    this.$bus.$on('imgLoad',() => {
-      refresh();
-    })
-  },
-
-
-  methods : {
-    /**
-     * 监听事件的方法
-     * 
-    */
-    // 获取流行，新品，精选三者其中一种的类型
-    goodsIndex(index){
-      this.$refs.tabContrl1.curryIndex = index;
-      this.$refs.tabContrl2.curryIndex = index;
-      // console.log(this.$refs.tabContrl2.$el);
-      
-      this.$refs.scroll.scrollToElement(this.$refs.tabContrl2.$el);
-      // console.log(index);
-      switch(index){
-        case 0 : return this.currentType = 'pop'
-        break;
-        case 1 : return this.currentType = 'new'
-        break;
-        case 2 : return this.currentType = 'sell'
-        break;
-      }
-      
-    },
-    // 回到顶部
-    backTop(){
-      this.$refs.scroll.scrollTo(0,0)
-    },
-
-    // 滚动使backTop显示与隐藏
-    getScroll(position){
-      this.isShowBack = (-position.y) > 1000
-      this.isShowTab = (-position.y) > this.backTopHeight
-    },
-    // 上来加载更多
-    upLoad(){
-      this.getGoods(this.currentType);
-    },
-    // 防抖
-    debounce(func,delay){
-      let timer = null;
-      return function(...args) { 
-          if(timer) clearTimeout(timer);
-          timer = setTimeout(() => {
-            // console.log(1);
-            func.apply(this,args);
-          }, delay);
-      }
-    },
-
-    getTabHeight(){
-      this.backTopHeight = this.$refs.tabContrl2.$el.offsetTop;
-    },
-
-    /**
-     * 获取数据的方法
-     * */ 
-    // 获取首页信息
-    getHome(){
-      axios.get('/home/multidata').then((res) => {
-        if(res.status == 200){
-          this.banner = res.data.data.banner.list;
-          this.recommend = res.data.data.recommend.list;
-        }    
-      })
-    },
-
-    // 获取首页商品信息
-    getGoods(type){
-      const page = this.goods[type].page + 1;
-      
-      axios.get('/home/data',{
-        params : {
-          type : type,
-          page : page
+      },
+		  tabClick(index) {
+        this.$refs.tabControl1.currentIndex = index;
+        this.$refs.tabControl2.currentIndex = index;
+        this.$refs.scroll.scrollToElement(this.$refs.tabControl2.$el,500);
+		    switch (index) {
+          case 0:
+            this.currentType = POP
+            break
+          case 1:
+            this.currentType = NEW
+            break
+          case 2:
+            this.currentType = SELL
+            break
         }
-      }).then((res) => {
-        this.goods[type].list.push(...res.data.data.list);
-        this.goods[type].page += 1;
-        // console.log(this.goods[type]);
-      })
-    }
-  },
+       
+      },
+      contentScroll(position) {
+        // 1.决定tabFixed是否显示
+        // console.log(position.y);
+        // console.log(-this.tabOffsetTop);
+        // this.$refs.scroll.refresh();
+        this.isTabFixed = position.y < -this.tabOffsetTop
 
-  computed: {
-    // 动态传递给子组价数据
-    activeGoodsList(){
-      // console.log(this.currentType);
-      return this.goods[this.currentType].list
-    }
-  },
+        // 2.决定backTop是否显示
+        this.showBackTop = position.y < -BACKTOP_DISTANCE
+      },
+      loadMore() {
+		    this.getHomeProducts(this.currentType)
+      },
+      backTop() {
+        this.$refs.scroll.scrollTo(0, 0, 300)
+      },
+      /**
+       * 网络请求相关方法
+       */
+      getMultiData() {
+        getHomeMultidata().then(res => {
+          this.banners = res.data[BANNER].list
+          this.recommends = res.data[RECOMMEND].list
+          // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
+          this.$nextTick(() => {
+            this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
+          })
+        })
+      },
+      getHomeProducts(type) {
+        getHomeData(type, this.goodsList[type].page).then(res => {
+          const goodsList = res.data.list;
+          this.goodsList[type].list.push(...goodsList)
+          this.goodsList[type].page += 1
 
-  activated: function () {
-    this.$refs.hSwiper.startTimer()
-  },
-  deactivated: function () {
-    this.$refs.hSwiper.stopTimer()
-  },
-}
+          this.$refs.scroll.finishPullUp()
+        })
+      }
+    }
+	}
 </script>
 
-<style lang="less" scoped>
-  // .nav-bar{
-  //   position: fixed;
-  //   top: 0;
-  //   left: 0;
-  //   right: 0;
-  //   z-index: 100;
-  // }
-  .nav-bar{
-    position: relative;
-    z-index: 100;
+<style scoped>
+  #home {
+    /*position: relative;*/
+    height: 100vh;
   }
-  .content{
-    padding-top: 44px;
-    
+  
+  .nav-bar {
+    background-color: var(--color-tint);
+    font-weight: 700;
+    color: #fff;
   }
-  .tab-contrl{
-    position: sticky;
-    top: 44px;
-    z-index: 99;
-  }
-  .wrapper{
+  
+
+  .content {
     position: absolute;
     top: 44px;
-    bottom: 44px;
+    bottom: 49px;
     left: 0;
     right: 0;
   }
-  
+
+  .fixed {
+    position: fixed;
+    top: 44px;
+    left: 0;
+    right: 0;
+  }
+
+  .back-top {
+    position: fixed;
+    right: 10px;
+    bottom: 60px;
+  }
 </style>
